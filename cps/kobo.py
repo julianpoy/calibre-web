@@ -184,6 +184,7 @@ def HandleSyncRequest():
     for book in changed_entries:
         formats = [data.format for data in book.data]
         if not 'KEPUB' in formats and config.config_kepubifypath and 'EPUB' in formats:
+            log.info("Converting EPUB to KEPUB format for Kobo sync.")
             helper.convert_book_format(book.id, config.config_calibre_dir, 'EPUB', 'KEPUB', current_user.nickname)
 
         kobo_reading_state = get_or_create_reading_state(book.id)
@@ -353,11 +354,18 @@ def get_seriesindex(book):
 def get_metadata(book):
     download_urls = []
     kepub = [data for data in book.data if data.format == 'KEPUB']
+    
+    if len(kepub) > 0:
+        log.info("Found KEPUB format for Kobo sync.")
+    else:
+        log.info("Did not find KEPUB format for Kobo sync.")
 
     for book_data in kepub if len(kepub) > 0 else book.data:
         if book_data.format not in KOBO_FORMATS:
+            log.info("Did not find any Kobo-compatible format.")
             continue
         for kobo_format in KOBO_FORMATS[book_data.format]:
+            log.info("Loading kobo-compatible format.")
             # log.debug('Id: %s, Format: %s' % (book.id, kobo_format))
             download_urls.append(
                 {
